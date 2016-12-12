@@ -1,0 +1,6 @@
+[submodule "Bagel"]
+	path = Bagel
+	url = https://git.coding.net/gjy/BagelScript.git
+[submodule "Rapidjson"]
+	path = Rapidjson
+	url = git@github.com:miloyip/rapidjson.git

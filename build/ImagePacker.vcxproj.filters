@@ -1,0 +1,138 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Bagel">
+      <UniqueIdentifier>{a7731ff6-7882-4c0f-b721-210794ad868a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="ReadMe.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="targetver.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Config.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_DCompiler.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_GC.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Include.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Number.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Parser.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_RCompiler.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Serializer.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_String.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Utils.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Var.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_Vcode.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\Bagel_VM.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\BKE_array.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\BKE_hash.hpp">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\bkutf8.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\extend.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\memorypool.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\poolmalloc.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Bagel\Engine\stack_allocator.h">
+      <Filter>Bagel</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ImagePacker.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_DCompiler.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_GC.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_Parser.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_RCompiler.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_Serializer.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_String.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_Utils.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_Var.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_Vcode.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\Bagel_VM.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\bkutf8.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\extend.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Bagel\Engine\poolmalloc.cpp">
+      <Filter>Bagel</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
