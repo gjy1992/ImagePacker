@@ -5,7 +5,7 @@
 
 void print_usage(const char *exe)
 {
-	cout << exe << " -o filename [-d Directory=./] [-sz width=256] [--includesubdir] [--disablerot] [--disablebound] [--enablesplit] [-format format=bagel]" << endl
+	cout << exe << " -o filename [-d Directory=./] [-sz width=256] [--includesubdir] [--disablerot] [--disablebound] [--enablesplit] [-format format=bagel] [-ol listfilename]" << endl
 		<< "For example:" << endl
 		<< exe << "-o output -sz 512 --enablesplit -format bagel" << endl << endl
 		<< "\t-o means output file (image file and data file), without extension" << endl
@@ -14,7 +14,8 @@ void print_usage(const char *exe)
 		<< "\t--disablerot means don't rotate picture 90 degree when generate packer image" << endl
 		<< "\t--disablebound means don't scissor alpha area when packing images" << endl
 		<< "\t--enablesplit means we may split the picture into small parts during packing, usually used in long slice image" << endl
-		<< "\t-format means the format of output data, can be bagel" << endl;
+		<< "\t-format means the format of output data, can be bagel" << endl
+		<< "\t-ol means the filename of the output list file, tell you which files are packed" << endl;
 }
 
 struct
@@ -22,6 +23,7 @@ struct
 	//UTF8
 	string dir;
 	string output;
+	string outlistfile;
 	bool subdir;
 	int width;
 	bool rot90;
@@ -44,6 +46,20 @@ void initOption()
 	options.bound = true;
 	options.split = false;
 	options.format = options.FMT_BAGEL;
+}
+
+//if file is a relative path, set it to be full path by see it as a file under dir
+void mergePath(const string &dir, string &file)
+{
+	if (file.empty())
+		return;
+	//absolute path on windows
+	if (file.size() > 2 && file[1] == ':')
+		return;
+	//linux
+	if (file[0] == '/' || file.substr(0,2) == "~/")
+		return;
+	file = dir + file;
 }
 
 void readOption(int argc, char ** argv)
@@ -69,6 +85,12 @@ void readOption(int argc, char ** argv)
 			++argv;
 			if (argv)
 				options.output = *argv;
+		}
+		else if (!strcmp("-ol", *argv))
+		{
+			++argv;
+			if (argv)
+				options.outlistfile = *argv;
 		}
 		else if (!strcmp("-sz", *argv))
 		{
@@ -122,7 +144,8 @@ void readOption(int argc, char ** argv)
 		if(argv)
 			++argv;
 	}
-	options.output = options.dir + options.output;
+	mergePath(options.dir, options.output);
+	mergePath(options.dir, options.outlistfile);
 }
 
 unordered_set<string> exts = {
@@ -602,6 +625,23 @@ void saveImageFile(Img *img)
 	SDL_FreeSurface(img);
 }
 
+void saveListFile()
+{
+	u16string res;
+	int dirlen = options.dir.size();
+	set<string> sorted;
+	for (auto &it : infomap)
+	{
+		sorted.insert(it.second.filename.substr(dirlen));
+	}
+	for (auto &it : sorted)
+	{
+		res += UTF16FromUTF8(it);
+		res += '\n';
+	}
+	_globalStructures.writeFunc(res, UTF16FromUTF8(options.outlistfile), 0);
+}
+
 void saveToBagelFile()
 {
 	auto v = new Bagel_Array();
@@ -660,6 +700,7 @@ void saveToBagelFile()
 void saveToFile(Img *img)
 {
 	saveImageFile(img);
+	saveListFile();
 	switch (options.format)
 	{
 	case options.FMT_BAGEL:
