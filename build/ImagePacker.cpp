@@ -176,7 +176,7 @@ void getFiles(const string &parentDir)
 				input_files.emplace_back(parentDir + fname);
 			}
 		}
-		else if (options.subdir && fname == "." && fname == "..")
+		else if (options.subdir && fname != "." && fname != "..")
 		{
 			string p = parentDir + fname + '/';
 			getFiles(p);
@@ -230,6 +230,7 @@ struct ImageInfo
 	int rawheight;
 	Rect bounding;
 	vector<Rect> split;
+	SDL_Point boundingoffset;
 
 	bool rot90;
 	vector<Rect> dstRect;
@@ -351,6 +352,7 @@ void loadAllImages()
 			info.rot90 = false;
 			info.rawwidth = img->w;
 			info.rawheight = img->h;
+			info.boundingoffset = { 0,0 };
 			if (img->format->format != SDL_PIXELFORMAT_ABGR8888)
 			{
 				Img *img2 = SDL_ConvertSurfaceFormat(img, SDL_PIXELFORMAT_ABGR8888, 0);
@@ -364,12 +366,6 @@ void loadAllImages()
 			else
 			{
 				findBounding(img, info);
-				if (options.rot90 && info.bounding.h > info.bounding.w)
-				{
-					info.rot90 = true;
-					swap(info.bounding.w, info.bounding.h);
-				}
-				infomap[img] = info;
 				if (info.bounding.w * info.bounding.h > options.width * options.width)
 				{
 					cout << "Ignore large file ";
@@ -380,21 +376,37 @@ void loadAllImages()
 					cout << it;
 				#endif
 					cout << "(" << info.bounding.w << "*" << info.bounding.h << ")" << endl;
-					infomap.erase(img);
 					SDL_FreeSurface(img);
 				}
 				else
 				{
-					if (!options.rot90)
+					if (options.rot90 && info.bounding.h > info.bounding.w)
 					{
-						stat_info.maxWidth = max(stat_info.maxWidth, info.bounding.w);
-						stat_info.maxHeight = max(stat_info.maxHeight, info.bounding.h);
+						info.rot90 = true;
+						//save the rotated img
+						SDL_Surface *src = SDL_CreateRGBSurface(0, info.bounding.h, info.bounding.w, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
+						//copy rot90
+						for (int x = info.bounding.x; x < info.bounding.x + info.bounding.w; x++)
+						{
+							//rot 90 counterclockwise
+							int newy = info.bounding.w - 1 - (x - info.bounding.x);
+							for (int y = info.bounding.y; y < info.bounding.y + info.bounding.h; y++)
+							{
+								uint32_t *srcdata = (uint32_t*)img->pixels + img->w * y + x;
+								uint32_t *dstdata = (uint32_t*)src->pixels + src->w * newy + y - info.bounding.y;
+								*dstdata = *srcdata;
+							}
+						}
+						SDL_FreeSurface(img);
+						img = src;
+						//info.boundingoffset = { info.bounding.y, info.rawwidth - 1 - info.bounding.x - info.bounding.w };
+						info.boundingoffset = { info.bounding.x, info.bounding.y };	//offset at raw image
+						swap(info.bounding.w, info.bounding.h);
+						info.bounding.x = info.bounding.y = 0;
 					}
-					else
-					{
-						stat_info.maxWidth = max(stat_info.maxWidth, max(info.bounding.w, info.bounding.h));
-						stat_info.maxHeight = max(stat_info.maxHeight, min(info.bounding.w, info.bounding.h));
-					}
+					infomap[img] = info;
+					stat_info.maxWidth = max(stat_info.maxWidth, info.bounding.w);
+					stat_info.maxHeight = max(stat_info.maxHeight, info.bounding.h);
 					stat_info.totalArea += info.bounding.w * info.bounding.h;
 				}
 			}
@@ -568,22 +580,6 @@ Img *BlitImages(int w, int h)
 	for (auto &it : infomap)
 	{
 		SDL_Surface *src = it.first;
-		if (it.second.rot90)
-		{
-			src = SDL_CreateRGBSurface(0, it.first->h, it.first->w, 32, 0xFF, 0xFF00, 0xFF0000, 0xFF000000);
-			//copy rot90
-			for (int x = it.second.bounding.x; x < it.second.bounding.x + it.second.bounding.h; x++)
-			{
-				//rot 90 counterclockwise
-				int newy = it.first->w - x - 1;
-				for (int y = it.second.bounding.y; y < it.second.bounding.y + it.second.bounding.w; y++)
-				{
-					uint32_t *srcdata = (uint32_t*)it.first->pixels + it.first->w * y + x;
-					uint32_t *dstdata = (uint32_t*)src->pixels + src->w * newy + y;
-					*dstdata = *srcdata;
-				}
-			}
-		}
 		SDL_SetSurfaceBlendMode(src, SDL_BLENDMODE_NONE);
 		if (it.second.split.empty())
 		{
@@ -595,10 +591,6 @@ Img *BlitImages(int w, int h)
 			{
 				SDL_BlitSurface(src, &it.second.split[i], batch, &it.second.dstRect[i]);
 			}
-		}
-		if (it.second.rot90)
-		{
-			SDL_FreeSurface(src);
 		}
 	}
 	return batch;
@@ -629,13 +621,27 @@ void saveToBagelFile()
 		auto r = new Bagel_Array();
 		if (info.split.empty())
 		{
-			r->pushMember({ info.bounding.x, info.bounding.y, info.bounding.w, info.bounding.h });
+			if (info.rot90)
+			{
+				r->pushMember({ info.boundingoffset.x, info.boundingoffset.y, info.bounding.h, info.bounding.w });
+			}
+			else
+			{
+				r->pushMember({ info.bounding.x, info.bounding.y, info.bounding.w, info.bounding.h });
+			}
 		}
 		else
 		{
 			for (auto &it2 : info.split)
 			{
-				r->pushMember({ it2.x, it2.y, it2.w, it2.h });
+				if (info.rot90)
+				{
+					r->pushMember({ info.bounding.h - it2.y - it2.h + info.boundingoffset.x, it2.x + info.boundingoffset.y, it2.h, it2.w });
+				}
+				else
+				{
+					r->pushMember({ it2.x, it2.y, it2.w, it2.h });
+				}
 			}
 		}
 		d->setMember(rects, r);
