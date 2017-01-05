@@ -14,7 +14,7 @@ void print_usage(const char *exe)
 		<< "\t--disablerot means don't rotate picture 90 degree when generate packer image" << endl
 		<< "\t--disablebound means don't scissor alpha area when packing images" << endl
 		<< "\t--enablesplit means we may split the picture into small parts during packing, usually used in long slice image" << endl
-		<< "\t-format means the format of output data, can be bagel" << endl
+		<< "\t-format means the format of output data, now only can be bke" << endl
 		<< "\t-ol means the filename of the output list file, tell you which files are packed" << endl;
 }
 
@@ -31,7 +31,7 @@ struct
 	bool split;
 	enum
 	{
-		FMT_BAGEL,
+		FMT_BKE,
 		FMT_JSON,
 		FMT_PLIST
 	}format;
@@ -45,7 +45,7 @@ void initOption()
 	options.rot90 = true;
 	options.bound = true;
 	options.split = false;
-	options.format = options.FMT_BAGEL;
+	options.format = options.FMT_BKE;
 }
 
 //if file is a relative path, set it to be full path by see it as a file under dir
@@ -121,7 +121,7 @@ void readOption(int argc, char ** argv)
 			{
 				if (!strcmp("bagel", *argv))
 				{
-					options.format = options.FMT_BAGEL;
+					options.format = options.FMT_BKE;
 				}
 				else if (!strcmp("json", *argv))
 				{
@@ -703,7 +703,7 @@ void saveToFile(Img *img)
 	saveListFile();
 	switch (options.format)
 	{
-	case options.FMT_BAGEL:
+	case options.FMT_BKE:
 		saveToBagelFile();
 		break;
 
