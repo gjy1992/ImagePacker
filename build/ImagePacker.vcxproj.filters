@@ -134,5 +134,8 @@
     <ClCompile Include="..\Bagel\Engine\poolmalloc.cpp">
       <Filter>Bagel</Filter>
     </ClCompile>
+    <ClCompile Include="image.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

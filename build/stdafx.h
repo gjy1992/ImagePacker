@@ -13,8 +13,6 @@
 
 
 // TODO:  在此处引用程序需要的其他头文件
-#include "../SDL2/include/SDL.h"
-#include "../SDL2/include/SDL_image.h"
 
 #include <iostream>
 #include <vector>
@@ -24,20 +22,11 @@
 #include <unordered_set>
 #include <algorithm>
 #include <functional>
+#include <array>
+#include <memory>
+#include "image.h"
 
 using namespace std;
 
 #include "../Bagel/Engine/Bagel_Include.h"
 #include "../Rapidjson/include/rapidjson/rapidjson.h"
-
-#ifdef _MSC_VER
- #ifdef WIN64
-  #pragma comment(lib, "../SDL2/lib/x64/SDL2main.lib")
-  #pragma comment(lib, "../SDL2/lib/x64/SDL2.lib")
-  #pragma comment(lib, "../SDL2/lib/x64/SDL2_image.lib")
- #else
-  #pragma comment(lib, "../SDL2/lib/x86/SDL2main.lib")
-  #pragma comment(lib, "../SDL2/lib/x86/SDL2.lib")
-  #pragma comment(lib, "../SDL2/lib/x86/SDL2_image.lib")
- #endif
-#endif
