@@ -426,13 +426,11 @@ void loadAllImages()
 					if (it2 != hashedinfomap.end())
 					{
 						infomap[it2->second].filenames.push_back(it);
-						delete img;
-						{
-							wcout << "Compact file ";
-							wcout << it;
-							wcout << "(" << infomap[it2->second].bounding.w << "*" << infomap[it2->second].bounding.h << ")" << endl;
-						}
+						wcout << "Compact file ";
+						wcout << it;
+						wcout << "(" << infomap[it2->second].bounding.w << "*" << infomap[it2->second].bounding.h << ")" << endl;
 						infomapmutex.unlock();
+						delete img;
 						return;
 					}
 					infomapmutex.unlock();
@@ -447,6 +445,7 @@ void loadAllImages()
 				findBounding(img, info);
 				if (info.bounding.w * info.bounding.h > options.width * options.width)
 				{
+					//sync wcout
 					infomapmutex.lock();
 					wcout << "Ignore large file ";
 					wcout << it;

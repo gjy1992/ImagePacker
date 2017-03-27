@@ -174,8 +174,10 @@
     <ClInclude Include="..\Bagel\Engine\memorypool.h" />
     <ClInclude Include="..\Bagel\Engine\poolmalloc.h" />
     <ClInclude Include="..\Bagel\Engine\stack_allocator.h" />
+    <ClInclude Include="picosha2.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
+    <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Bagel\Engine\Bagel_DCompiler.cpp">

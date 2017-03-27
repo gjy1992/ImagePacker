@@ -1,29 +1,3 @@
-/****************************************************************************
-Copyright (c) 2010 cocos2d-x.org
-
-http://www.cocos2d-x.org
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in
-all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-THE SOFTWARE.
-****************************************************************************/
-
-
-
 #include "image.h"
 #include <string>
 #include <ctype.h>
@@ -33,8 +7,6 @@ THE SOFTWARE.
 #include "jpeglib.h"
 #include "../Bagel/Engine/bkutf8.h"
 using namespace std;
-
-// on ios, we should use platform/ios/CCImage_ios.mm instead
 
 typedef struct 
 {
@@ -101,60 +73,39 @@ bool Image::initWithFile(const std::wstring &file)
 
 bool Image::initWithImageData(unsigned char * pData,
 								unsigned int nDataLen, 
-                                EImageFormat eFmt/* = eSrcFmtPng*/, 
                                 int nWidth/* = 0*/,
                                 int nHeight/* = 0*/)
 {
     bool bRet = false;
     do 
     {
-        CC_BREAK_IF(! pData || nDataLen <= 0);
-
-        if (kFmtPng == eFmt)
+        // if it is a png file buffer.
+        if (nDataLen > 8)
         {
-            bRet = _initWithPngData(pData, nDataLen);
-            break;
-        }
-        else if (kFmtJpg == eFmt)
-        {
-            bRet = _initWithJpgData(pData, nDataLen);
-            break;
-        }
-        else if (kFmtRawData == eFmt)
-        {
-            bRet = _initWithRawData(pData, nDataLen, nWidth, nHeight);
-            break;
-        }
-        else
-        {
-            // if it is a png file buffer.
-            if (nDataLen > 8)
+            unsigned char* pHead = (unsigned char*)pData;
+            if (   pHead[0] == 0x89
+                && pHead[1] == 0x50
+                && pHead[2] == 0x4E
+                && pHead[3] == 0x47
+                && pHead[4] == 0x0D
+                && pHead[5] == 0x0A
+                && pHead[6] == 0x1A
+                && pHead[7] == 0x0A)
             {
-                unsigned char* pHead = (unsigned char*)pData;
-                if (   pHead[0] == 0x89
-                    && pHead[1] == 0x50
-                    && pHead[2] == 0x4E
-                    && pHead[3] == 0x47
-                    && pHead[4] == 0x0D
-                    && pHead[5] == 0x0A
-                    && pHead[6] == 0x1A
-                    && pHead[7] == 0x0A)
-                {
-                    bRet = _initWithPngData(pData, nDataLen);
-                    break;
-                }
+                bRet = _initWithPngData(pData, nDataLen);
+                break;
             }
+        }
 
-            // if it is a jpeg file buffer.
-            if (nDataLen > 2)
+        // if it is a jpeg file buffer.
+        if (nDataLen > 2)
+        {
+            unsigned char* pHead = (unsigned char*)pData;
+            if (   pHead[0] == 0xff
+                && pHead[1] == 0xd8)
             {
-                unsigned char* pHead = (unsigned char*)pData;
-                if (   pHead[0] == 0xff
-                    && pHead[1] == 0xd8)
-                {
-                    bRet = _initWithJpgData(pData, nDataLen);
-                    break;
-                }
+                bRet = _initWithJpgData(pData, nDataLen);
+                break;
             }
         }
     } while (0);
@@ -291,10 +242,12 @@ bool Image::_initWithJpgData(void * data, int nSize)
         h = (short)(cinfo.output_height);
 		pitch = w * 4;
         row_pointer[0] = new unsigned char[cinfo.output_width*cinfo.output_components];
-        CC_BREAK_IF(! row_pointer[0]);
+		if (!row_pointer[0])
+			break;
 
         pixels = new unsigned char[cinfo.output_width*cinfo.output_height*cinfo.output_components];
-        CC_BREAK_IF(! pixels);
+		if (!pixels)
+			break;
 
         /* now actually read the jpeg into the raw buffer */
         /* read one scan line at a time */
@@ -318,7 +271,8 @@ bool Image::_initWithJpgData(void * data, int nSize)
         bRet = true;
     } while (0);
 
-    CC_SAFE_DELETE_ARRAY(row_pointer[0]);
+	if (row_pointer[0])
+		delete[] row_pointer[0];
     return bRet;
 }
 
@@ -334,19 +288,23 @@ bool Image::_initWithPngData(void * pData, int nDatalen)
     do 
     {
         // png header len is 8 bytes
-        CC_BREAK_IF(nDatalen < PNGSIGSIZE);
+		if (nDatalen < PNGSIGSIZE)
+			break;
 
         // check the data is png or not
         memcpy(header, pData, PNGSIGSIZE);
-        CC_BREAK_IF(png_sig_cmp(header, 0, PNGSIGSIZE));
+		if (png_sig_cmp(header, 0, PNGSIGSIZE))
+			break;
 
         // init png_struct
         png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, 0, 0, 0);
-        CC_BREAK_IF(! png_ptr);
+		if (!png_ptr)
+			break;
 
         // init png_info
         info_ptr = png_create_info_struct(png_ptr);
-        CC_BREAK_IF(!info_ptr);
+		if (!info_ptr)
+			break;
 
 #if (CC_TARGET_PLATFORM != CC_PLATFORM_BADA && CC_TARGET_PLATFORM != CC_PLATFORM_NACL)
         CC_BREAK_IF(setjmp(png_jmpbuf(png_ptr)));
@@ -410,7 +368,8 @@ bool Image::_initWithPngData(void * pData, int nDatalen)
         rowbytes = png_get_rowbytes(png_ptr, info_ptr);
         
         pixels = new unsigned char[rowbytes * h];
-        CC_BREAK_IF(!pixels);
+		if (!pixels)
+			break;
         
         for (unsigned short i = 0; i < h; ++i)
         {
@@ -422,7 +381,8 @@ bool Image::_initWithPngData(void * pData, int nDatalen)
         
         png_uint_32 channel = rowbytes/w;
 
-        CC_SAFE_FREE(row_pointers);
+		if (row_pointers)
+			free(row_pointers);
 
         bRet = true;
     } while (0);
@@ -434,30 +394,6 @@ bool Image::_initWithPngData(void * pData, int nDatalen)
     return bRet;
 }
 
-
-bool Image::_initWithRawData(unsigned char * pData,
-							   unsigned int nDataLen, int nWidth, int nHeight)
-{
-    bool bRet = false;
-    do 
-    {
-        CC_BREAK_IF(0 == nWidth || 0 == nHeight);
-
-        h   = (short)nHeight;
-        w    = (short)nWidth;
-		pitch = w * 4;
-
-        // only RGBA8888 supported
-        int nSize = nHeight * nWidth * 4;
-        pixels = new unsigned char[nSize];
-        CC_BREAK_IF(! pixels);
-        memcpy(pixels, pData, nSize);
-
-        bRet = true;
-    } while (0);
-
-    return bRet;
-}
 
 static void bke_write_png_callback(png_structp png_ptr, png_bytep data, png_size_t length)
 {
@@ -484,7 +420,8 @@ bool Image::saveImageToPNG(const wstring &pszFilePath, bool bIsToRGB)
 #else
 		f = fopen(UniToUTF8(pszFilePath).c_str(), "wb");
 #endif
-        CC_BREAK_IF(NULL == f);
+		if (f == NULL)
+			break;
 
         png_ptr = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
@@ -495,7 +432,7 @@ bool Image::saveImageToPNG(const wstring &pszFilePath, bool bIsToRGB)
         }
 
         info_ptr = png_create_info_struct(png_ptr);
-        if (NULL == info_ptr)
+        if (info_ptr == NULL)
         {
 			fclose(f);
             png_destroy_write_struct(&png_ptr, NULL);
@@ -540,16 +477,16 @@ bool Image::saveImageToPNG(const wstring &pszFilePath, bool bIsToRGB)
 		if (bIsToRGB)
 		{
 			unsigned char *pTempData = new unsigned char[w * h * 3];
-			if (NULL == pTempData)
+			if (pTempData == NULL)
 			{
 				fclose(f);
 				png_destroy_write_struct(&png_ptr, &info_ptr);
 				break;
 			}
 
-			for (int i = 0; i < h; ++i)
+			for (unsigned int i = 0; i < h; ++i)
 			{
-				for (int j = 0; j < w; ++j)
+				for (unsigned int j = 0; j < w; ++j)
 				{
 					pTempData[(i * w + j) * 3] = pixels[(i * w + j) * 4];
 					pTempData[(i * w + j) * 3 + 1] = pixels[(i * w + j) * 4 + 1];
@@ -567,7 +504,8 @@ bool Image::saveImageToPNG(const wstring &pszFilePath, bool bIsToRGB)
 			free(row_pointers);
 			row_pointers = NULL;
 
-			CC_SAFE_DELETE_ARRAY(pTempData);
+			if (pTempData)
+				delete[] pTempData;
 		}
 		else
 		{
