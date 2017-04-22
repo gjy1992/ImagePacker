@@ -12,9 +12,9 @@
 
 void print_usage(const wchar_t *exe)
 {
-	wcout << exe << " -o filename [-d Directory=./] [-sz width=256] [--includesubdir] [--disablerot] [--disablebound] [--enablesplit] [-format format=bagel] [-ol listfilename]" << endl
+	wcout << exe << " -o filename [-d Directory=./] [-sz width=256] [--includesubdir] [--disablerot] [--disablebound] [--enablesplit] [-format format=bagel] [-ol listfilename] [-maxwidth width=2048]" << endl
 		<< "For example:" << endl
-		<< exe << "-o output -sz 512 --enablesplit -format bagel" << endl << endl
+		<< exe << "-o output -sz 512 --enablesplit -format bagel -maxwidth 4096" << endl << endl
 		<< "\t-o means output file (image file and data file), without extension" << endl
 		<< "\t-d means input directory" << endl
 		<< "\t-sz means only handle picture with area (after bounding) smaller or euqal to this value's square" << endl
@@ -22,7 +22,9 @@ void print_usage(const wchar_t *exe)
 		<< "\t--disablebound means don't scissor alpha area when packing images" << endl
 		<< "\t--enablesplit means we may split the picture into small parts during packing, usually used in long slice image" << endl
 		<< "\t-format means the format of output data, now only can be bke" << endl
-		<< "\t-ol means the filename of the output list file, tell you which files are packed" << endl;
+		<< "\t-ol means the filename of the output list file, tell you which files are packed" << endl
+		<< "\t-maxwidth means the maximum width and height of the merge image, default is 2048" << endl
+		;
 }
 
 struct
@@ -43,6 +45,7 @@ struct
 		FMT_PLIST
 	}format;
 	bool compact;
+	int maxwidth;
 }options;
 
 void initOption()
@@ -55,6 +58,7 @@ void initOption()
 	options.split = false;
 	options.format = options.FMT_BKE;
 	options.compact = false;
+	options.maxwidth = 2048;
 }
 
 //if file is a relative path, set it to be full path by see it as a file under dir
@@ -149,6 +153,12 @@ void readOption(int argc, wchar_t ** argv)
 		else if (!wcscmp(L"-compact", *argv))
 		{
 			options.compact = true;
+		}
+		else if (!wcscmp(L"-maxwidth", *argv))
+		{
+			++argv;
+			if (argv)
+				options.maxwidth = wcstol(*argv, nullptr, 10);
 		}
 		else
 		{
@@ -892,36 +902,34 @@ int wmain(int argc, wchar_t ** argv)
 	int w, h;
 	calcCanvasSize(w, h);
 
-	if (!options.split)
+	if (w > options.maxwidth || h > options.maxwidth)
+		goto fail;
+	bool res = doWithoutSplit(w, h);
+	while (!res && (w < 2048 || h < 2048))
 	{
-		bool res = doWithoutSplit(w, h);
-		while (!res && (w < 2048 || h < 2048))
+		if (w != h)
 		{
-			if (w != h)
-			{
-				w = max(w, h);
-				h = max(w, h);
-			}
-			else
-			{
-				w *= 2;
-			}
-			clearRectsInfo();
-			res = doWithoutSplit(w, h);
+			w = max(w, h);
+			h = max(w, h);
 		}
-		if (!res)
+		else
 		{
-			goto fail;
+			w *= 2;
 		}
-		Img *batch = blitImages(w, h);
-		if (!batch)
-			goto fail;
-		saveToFile(batch);
-		wcout << "pack success!" << endl;
-		wcout << "Pack image size " << w << " * " << h << endl;
-		goto end;
+		clearRectsInfo();
+		res = doWithoutSplit(w, h);
 	}
-
+	if (!res)
+	{
+		goto fail;
+	}
+	Img *batch = blitImages(w, h);
+	if (!batch)
+		goto fail;
+	saveToFile(batch);
+	wcout << "pack success!" << endl;
+	wcout << "Pack image size " << w << " * " << h << endl;
+	goto end;
 
 fail:
 	wcout << "fail to pack iamges, maybe too many images to pack" << endl;
